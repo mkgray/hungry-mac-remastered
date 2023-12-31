@@ -1,6 +1,7 @@
 import pgzero, pgzrun, pygame
 from enum import Enum
 import numpy as np
+import random
 
 #***************#
 # Game settings #
@@ -36,16 +37,22 @@ class Dirt(Actor):
         pass
 
 # # Class for basic grass tiles (TODO: Add creeping charlie)
-# class Grass(Actor):
-#     def __init__(self, pos, anchor=ANCHOR_CENTRE):
-#         image = "grass"
-#         super().__init__("blank", pos, anchor)
+class Grass(Actor):
+    def __init__(self, pos, anchor=ANCHOR_CENTRE):
+        super().__init__("grass", pos, anchor)
+
+    # Placeholder for grass mechanics
+    def update(self):
+        pass
 
 # # Class for Player/Mac
-# class Player(Actor):
-#     image = "grass"
-#     super().__init__("Mac", pos, anchor)
+class Player(Actor):
+    def __init__(self, pos, anchor=ANCHOR_CENTRE):
+        super().__init__("mac", pos, anchor)
 
+        # Placeholder for Mac mechanics
+    def update(self):
+        pass
 
 # Class to handle game events
 class Game:
@@ -53,17 +60,26 @@ class Game:
         self.player = player # Should define bot or human player
 
         self.background_layer = []
+        self.foreground_layer = []
+        self.player_layer = []
 
         # Generate initial layout
         # start with dirt for width & height
         background_mask = np.full((tiles_height, tiles_width), 1)
+        grass_mask = self.generate_grass_mask(n_tiles_height, n_tiles_width, GRASS_PERCENTAGE)
 
         for row in range(tiles_height):
             for column in range(tiles_width):
+                # Identify coordinates corresponding to tile location
                 pos_x = (tile_size/2) + row*tile_size
                 pos_y = (tile_size/2) + column*tile_size
+
+                # Generate dirt
                 self.background_layer.append(Dirt((pos_x, pos_y)))
-                #self.background_layer = [[Dirt((i, j)) for j in range(tiles_width) for i in range(tiles_height)]]
+
+                # Generate grass
+                if grass_mask[row][column] == True:
+                    self.foreground_layer.append(Grass((pos_x, pos_y)))
 
         #interactive_layer = np.zeros((tiles_height, tiles_width))
 
@@ -71,24 +87,24 @@ class Game:
         #player_y_start = tiles_height//2
         #player_coordinates = (player_x_start, player_y_start)
 
+    def generate_grass_mask(self, rows, columns, probability):
+        """Generate a 2D array of boolean values based on a constant random probability."""
+        return [[random.random() < probability for _ in range(columns)] for _ in range(rows)]
+
     def update(self):
         # Update all objects
-        for obj in self.background_layer:
+        all_objs = self.background_layer + self.foreground_layer
+        for obj in all_objs:
             if obj:
                 obj.update()
 
+
     def draw(self):
         # draw all background dirt
-        for obj in self.background_layer:
+        all_objs = self.background_layer + self.foreground_layer
+        for obj in all_objs:
             if obj:
                 obj.draw()
-
-        # # draw all interactive objects
-        # for obj in interactive_objects:
-        #     obj.draw()
-
-        # # draw the player
-        # self.player.draw()
 
 
 
