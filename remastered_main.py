@@ -66,7 +66,12 @@ class Game:
         # Generate initial layout
         # start with dirt for width & height
         background_mask = np.full((tiles_height, tiles_width), 1)
+
+        player_spawn = self.generate_player_spawn(tiles_height, tiles_width)
+
+        # Generate grass and ignore player tile since grass cannot exist on player
         grass_mask = self.generate_grass_mask(n_tiles_height, n_tiles_width, GRASS_PERCENTAGE)
+        grass_mask[player_spawn[0]][player_spawn[1]] = False
 
         for row in range(tiles_height):
             for column in range(tiles_width):
@@ -81,19 +86,23 @@ class Game:
                 if grass_mask[row][column] == True:
                     self.foreground_layer.append(Grass((pos_x, pos_y)))
 
-        #interactive_layer = np.zeros((tiles_height, tiles_width))
-
-        #player_x_start = tiles_width//2
-        #player_y_start = tiles_height//2
-        #player_coordinates = (player_x_start, player_y_start)
+                # Generate player if at predetermined coordinates
+                if column == player_spawn[0]:
+                    if row == player_spawn[1]:
+                        self.player_layer.append(Player((pos_x, pos_y)))
 
     def generate_grass_mask(self, rows, columns, probability):
         """Generate a 2D array of boolean values based on a constant random probability."""
         return [[random.random() < probability for _ in range(columns)] for _ in range(rows)]
 
+    def generate_player_spawn(self, n_tiles_height, n_tiles_width):
+        x_coord = random.randrange(n_tiles_width)
+        y_coord = random.randrange(n_tiles_height)
+        return (x_coord, y_coord)
+
     def update(self):
         # Update all objects
-        all_objs = self.background_layer + self.foreground_layer
+        all_objs = self.background_layer + self.foreground_layer + self.player_layer
         for obj in all_objs:
             if obj:
                 obj.update()
@@ -101,7 +110,7 @@ class Game:
 
     def draw(self):
         # draw all background dirt
-        all_objs = self.background_layer + self.foreground_layer
+        all_objs = self.background_layer + self.foreground_layer + self.player_layer
         for obj in all_objs:
             if obj:
                 obj.draw()
