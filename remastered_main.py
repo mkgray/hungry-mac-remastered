@@ -47,12 +47,41 @@ class Grass(Actor):
 
 # # Class for Player/Mac
 class Player(Actor):
+    HOP_SPEED = 4
+    HOP_DURATION = 10
+
     def __init__(self, pos, anchor=ANCHOR_CENTRE):
         super().__init__("mac", pos, anchor)
 
+        # USed to indicate direction of movement/facing when advanced graphics implemented
+        self.direction = 'down'
+
+        # Used to identify when a motion is being carried out (during movement)
+        self.timer = 0
+
         # Placeholder for Mac mechanics
     def update(self):
-        pass
+
+        # Perform movement if any is queued up
+        if self.timer > 0:
+            if self.direction == 'up':
+                self.y -= self.HOP_SPEED
+            elif self.direction == 'down':
+                self.y += self.HOP_SPEED
+            elif self.direction == 'left':
+                self.x -= self.HOP_SPEED
+            elif self.direction == 'right':
+                self.x += self.HOP_SPEED
+
+            self.timer -= 1
+
+        # Only check for movemenets if not hopping
+        if self.timer == 0:
+            # Pick random direction for now
+            self.direction = random.choice(["up", "down", "left", "right"])
+            self.timer = self.HOP_DURATION
+
+
 
 # Class to handle game events
 class Game:
