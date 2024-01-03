@@ -41,6 +41,12 @@ class Grass(Actor):
     def __init__(self, pos, anchor=ANCHOR_CENTRE):
         super().__init__("grass", pos, anchor)
 
+    def detect_interaction(self, intended_x, intended_y):
+        # Check x coordinate
+        if (abs(self.x-intended_x) < TILE_SIZE/2) & (abs(self.y-intended_y) < TILE_SIZE/2):
+            return True
+        return False
+
     # Placeholder for grass mechanics
     def update(self):
         pass
@@ -78,8 +84,38 @@ class Player(Actor):
         # Only check for movemenets if not hopping
         if self.timer == 0:
             # Pick random direction for now
-            self.direction = random.choice(["up", "down", "left", "right"])
-            self.timer = self.HOP_DURATION
+            # TODO: Add ability to determine if movement is valid or not
+            intended_direction = random.choice(["up", "down", "left", "right"])
+            if intended_direction == 'up':
+                intended_y = self.y - self.HOP_SPEED*self.HOP_DURATION
+                intended_x = self.x
+            elif intended_direction == 'down':
+                intended_y = self.y + self.HOP_SPEED*self.HOP_DURATION
+                intended_x = self.x
+            elif intended_direction == 'left':
+                intended_x = self.x - self.HOP_SPEED*self.HOP_DURATION
+                intended_y = self.y
+            elif intended_direction == 'right':
+                intended_x = self.x + self.HOP_SPEED*self.HOP_DURATION
+                intended_y = self.y
+
+            # For validity check: Loop through all collission objects to check if any collision, if so invoke the appropriate response
+            movement_allowed = True
+
+            # Movement must be within game boundaries
+            if (intended_x < 0) | (intended_x > WIDTH):
+                movement_allowed = False
+
+            if (intended_y < 0) | (intended_y > HEIGHT):
+                movement_allowed = False
+
+            for obj in game.foreground_layer:
+                if obj.detect_interaction(intended_x, intended_y):
+                    movement_allowed = False
+
+            if movement_allowed:
+                self.direction = intended_direction
+                self.timer = self.HOP_DURATION
 
 
 
