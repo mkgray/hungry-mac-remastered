@@ -67,6 +67,9 @@ class Player(Actor):
     HOP_DURATION = 10
     CONSUME_DURATION = 20
 
+    IDLE_DELAY_AVERAGE = 20
+    IDLE_DELAY_VARIANCE = 8
+
     def __init__(self, pos, anchor=ANCHOR_CENTRE):
         super().__init__("mac", pos, anchor)
 
@@ -79,6 +82,10 @@ class Player(Actor):
 
         # Placeholder for Mac mechanics
     def update(self):
+
+        # If idling, count down timer until next action to be performed
+        if (self.timer > 0) & (self.action == 'none'):
+            self.timer -= 1
 
         # Perform movement if any is queued up
         if (self.timer > 0) & (self.action == 'hop'):
@@ -93,12 +100,24 @@ class Player(Actor):
 
             self.timer -= 1
 
+            # When hop is over, return to idle state and randomize time until next action
+            if self.timer == 0:
+                self.action = 'none'
+                self.image = 'sit_' + self.direction
+                self.timer = random.randint(self.IDLE_DELAY_AVERAGE-self.IDLE_DELAY_VARIANCE, self.IDLE_DELAY_AVERAGE+self.IDLE_DELAY_VARIANCE)
+
         # Perform consume action if any is queued up
         if (self.timer > 0) & (self.action == 'consume'):
             self.timer -= 1
 
+            # When consume is over, return to idle state and randomize time until next action
+            if self.timer == 0:
+                self.action = 'none'
+                self.image = 'sit_' + self.direction
+                self.timer = random.randint(self.IDLE_DELAY_AVERAGE-self.IDLE_DELAY_VARIANCE, self.IDLE_DELAY_AVERAGE+self.IDLE_DELAY_VARIANCE)
+
         # Only check for movemenets if not hopping
-        if self.timer == 0:
+        if (self.timer == 0) & (self.action == 'none'):
             # Pick random direction for now
             # TODO: Add ability to determine if movement is valid or not
             intended_direction = random.choice(["up", "down", "left", "right"])
@@ -137,10 +156,12 @@ class Player(Actor):
                 self.direction = intended_direction
                 self.timer = self.HOP_DURATION
                 self.action = 'hop'
+                self.image = 'jump_' + intended_direction
 
             if ~movement_allowed:
                 if interaction_type == 'consume':
                     self.direction = intended_direction
+                    self.image = 'sit_' + intended_direction
                     #TODO: TRIGGER CHOMP ACTION
                     self.timer = self.CONSUME_DURATION
                     self.action = "consume"
