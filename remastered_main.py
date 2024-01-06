@@ -108,6 +108,8 @@ class Player(Actor):
 
         # Perform consume action if any is queued up
         if (self.timer > 0) & (self.action == 'consume'):
+            if (self.timer == self.CONSUME_DURATION):
+                sounds.bite.play(0)
             self.timer -= 1
 
             # When consume is over, return to idle state and randomize time until next action
