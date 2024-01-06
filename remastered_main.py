@@ -40,6 +40,8 @@ class Dirt(Actor):
 class Grass(Actor):
     def __init__(self, pos, anchor=ANCHOR_CENTRE):
         super().__init__("grass", pos, anchor)
+        self.state = 'exists'
+        self.timer = 0
 
     def detect_interaction(self, intended_x, intended_y):
         # Check x coordinate
@@ -47,20 +49,30 @@ class Grass(Actor):
             return True
         return False
 
+    def perform_interaction(self):
+        self.state = 'consuming'
+        self.timer = 20
+        return 'consume'
+
     # Placeholder for grass mechanics
     def update(self):
-        pass
+        if self.timer > 0:
+            self.timer -= 1
+            if self.timer == 0:
+                state = 'removed'
 
 # # Class for Player/Mac
 class Player(Actor):
     HOP_SPEED = 4
     HOP_DURATION = 10
+    CONSUME_DURATION = 20
 
     def __init__(self, pos, anchor=ANCHOR_CENTRE):
         super().__init__("mac", pos, anchor)
 
         # USed to indicate direction of movement/facing when advanced graphics implemented
         self.direction = 'down'
+        self.action = 'none'
 
         # Used to identify when a motion is being carried out (during movement)
         self.timer = 0
@@ -69,7 +81,7 @@ class Player(Actor):
     def update(self):
 
         # Perform movement if any is queued up
-        if self.timer > 0:
+        if (self.timer > 0) & (self.action == 'hop'):
             if self.direction == 'up':
                 self.y -= self.HOP_SPEED
             elif self.direction == 'down':
@@ -79,6 +91,10 @@ class Player(Actor):
             elif self.direction == 'right':
                 self.x += self.HOP_SPEED
 
+            self.timer -= 1
+
+        # Perform consume action if any is queued up
+        if (self.timer > 0) & (self.action == 'consume'):
             self.timer -= 1
 
         # Only check for movemenets if not hopping
@@ -101,21 +117,33 @@ class Player(Actor):
 
             # For validity check: Loop through all collission objects to check if any collision, if so invoke the appropriate response
             movement_allowed = True
+            interaction_type = 'none'
 
             # Movement must be within game boundaries
             if (intended_x < 0) | (intended_x > WIDTH):
                 movement_allowed = False
+                interaction_type = 'blocked'
 
             if (intended_y < 0) | (intended_y > HEIGHT):
                 movement_allowed = False
+                interaction_type = 'blocked'
 
             for obj in game.foreground_layer:
                 if obj.detect_interaction(intended_x, intended_y):
                     movement_allowed = False
+                    interaction_type = obj.perform_interaction()
 
             if movement_allowed:
                 self.direction = intended_direction
                 self.timer = self.HOP_DURATION
+                self.action = 'hop'
+
+            if ~movement_allowed:
+                if interaction_type == 'consume':
+                    self.direction = intended_direction
+                    #TODO: TRIGGER CHOMP ACTION
+                    self.timer = self.CONSUME_DURATION
+                    self.action = "consume"
 
 
 
@@ -171,6 +199,9 @@ class Game:
         for obj in all_objs:
             if obj:
                 obj.update()
+
+        # Update relevant objects to clean up any objects no longer active
+        self.foreground_layer = [x for x in self.foreground_layer if x.state == 'exists']
 
 
     def draw(self):
