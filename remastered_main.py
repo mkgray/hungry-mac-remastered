@@ -24,6 +24,9 @@ MAC = 2
 # STARTING GRASS LIKELYHOOD (in %) OF SPAWNING
 GRASS_PERCENTAGE = 0.25
 
+# ADJUST NUMBER OF BUNNIES
+NUMBER_OF_BUNS = 3
+
 # Other default values
 ANCHOR_CENTRE = ("center", "center")
 
@@ -183,11 +186,14 @@ class Game:
         # start with dirt for width & height
         background_mask = np.full((tiles_height, tiles_width), 1)
 
-        player_spawn = self.generate_player_spawn(tiles_height, tiles_width)
+        player_spawns = [self.generate_player_spawn(tiles_height, tiles_width) for x in range(NUMBER_OF_BUNS)]
 
         # Generate grass and ignore player tile since grass cannot exist on player
         grass_mask = self.generate_grass_mask(n_tiles_height, n_tiles_width, GRASS_PERCENTAGE)
-        grass_mask[player_spawn[0]][player_spawn[1]] = False
+
+        # Remove all grass tiles that a bun spawns on
+        for x in player_spawns:
+            grass_mask[x[0]][x[1]] = False
 
         for row in range(tiles_height):
             for column in range(tiles_width):
@@ -202,10 +208,11 @@ class Game:
                 if grass_mask[row][column] == True:
                     self.foreground_layer.append(Grass((pos_x, pos_y)))
 
-                # Generate player if at predetermined coordinates
-                if column == player_spawn[0]:
-                    if row == player_spawn[1]:
-                        self.player_layer.append(Player((pos_x, pos_y)))
+                # Generate bunnies if at predetermined coordinates
+                for x in player_spawns:
+                    if column == x[0]:
+                        if row == x[1]:
+                            self.player_layer.append(Player((pos_x, pos_y)))
 
     def generate_grass_mask(self, rows, columns, probability):
         """Generate a 2D array of boolean values based on a constant random probability."""
