@@ -83,6 +83,9 @@ class Player(Actor):
         # Used to identify when a motion is being carried out (during movement)
         self.timer = 0
 
+        # Randomize the colour of the bun
+        self.colour = random.choice(["white", "black"])
+
         # Placeholder for Mac mechanics
     def update(self):
 
@@ -106,7 +109,7 @@ class Player(Actor):
             # When hop is over, return to idle state and randomize time until next action
             if self.timer == 0:
                 self.action = 'none'
-                self.image = 'sit_' + self.direction
+                self.image = 'sit_' + self.direction + '_' + self.colour
                 self.timer = random.randint(self.IDLE_DELAY_AVERAGE-self.IDLE_DELAY_VARIANCE, self.IDLE_DELAY_AVERAGE+self.IDLE_DELAY_VARIANCE)
 
         # Perform consume action if any is queued up
@@ -118,7 +121,7 @@ class Player(Actor):
             # When consume is over, return to idle state and randomize time until next action
             if self.timer == 0:
                 self.action = 'none'
-                self.image = 'sit_' + self.direction
+                self.image = 'sit_' + self.direction + '_' + self.colour
                 self.timer = random.randint(self.IDLE_DELAY_AVERAGE-self.IDLE_DELAY_VARIANCE, self.IDLE_DELAY_AVERAGE+self.IDLE_DELAY_VARIANCE)
 
         # Only check for movemenets if not hopping
@@ -161,12 +164,12 @@ class Player(Actor):
                 self.direction = intended_direction
                 self.timer = self.HOP_DURATION
                 self.action = 'hop'
-                self.image = 'jump_' + intended_direction
+                self.image = 'jump_' + intended_direction + '_' + self.colour
 
             if ~movement_allowed:
                 if interaction_type == 'consume':
                     self.direction = intended_direction
-                    self.image = 'sit_' + intended_direction
+                    self.image = 'sit_' + intended_direction + '_' + self.colour
                     #TODO: TRIGGER CHOMP ACTION
                     self.timer = self.CONSUME_DURATION
                     self.action = "consume"
